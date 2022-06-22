@@ -1,16 +1,23 @@
+from crypto import encrypt
 from database import *
+from mlogging import *
+
 from colorama import init, Fore
 
 init(autoreset=True)
 
 
-def safe_input(greetting):
+def safe_input(greeting: str) -> str:
+    """
+    Безопасный ввод
+    :param greeting: str
+    :return: str
+    """
     while True:
-        s = input(greetting).strip()
-        if all(sub not in s for sub in r"'\"\\,"):
+        s = input(greeting).strip()
+        if s and all(sub not in s for sub in r"'\"\\,"):
             return s
-        print(Fore.RED + "Ник содержит недопустимые символы. Пожалуйста, выполните ввод снова!")
-
+        print(Fore.RED + "Строка содержит недопустимые символы. Пожалуйста, выполните ввод снова!")
 
 
 def sign_in():
@@ -18,53 +25,60 @@ def sign_in():
     Регистрация пользователя
     :return:
     """
+    nick = safe_input("Введите ник: ")
+    try_create()
+    cursor.execute(f"SELECT email FROM users WHERE nickname = '{nick}'")
     while True:
-        nick = safe_input("Введите ник: ")
-        try_create()
-        cursor.execute(f"SELECT nickname FROM users WHERE nickname = '{nick}'")
-        if cursor.fetchone() is None:
-            login = safe_input("Введите логин: ")
-            pswd = safe_input("Введите пароль: ")
-            cursor.execute(f"INSERT INTO users (nickname, login, password) VALUES (?, ?, ?)",
-                               (nick, login, pswd))
+        email = safe_input("Введите email: ")
+        if cursor.fetchone() != email:
+            passwd = safe_input("Введите пароль: ")
+            cursor.execute(f"INSERT INTO users (nickname, email, password) VALUES (?, ?, ?)",
+                           (nick, encrypt(email), encrypt(passwd)))
             db.commit()
             print("Регистрация прошла успешно!")
+            logger.info("User sign in succession")
             break
         else:
-            print(Fore.RED + "Этот ник занят! Используйте другой")
+            print(Fore.RED + "Эта почта уже занята! Используйте другую")
 
 
 def sign_up():
+    """
+    Вход пользователя
+    :return:
+    """
     while True:
-        login = safe_input("Введите логин: ")
-        pswd = safe_input("Введите пароль: ")
+        email = encrypt(safe_input("Введите email: "))
+        passwd = encrypt(safe_input("Введите пароль: "))
         try_create()
-        cursor.execute(f"SELECT login FROM users WHERE login = '{login}'")
-        corect_login = cursor.fetchone()[0]
-        cursor.execute(f"SELECT password FROM users WHERE login = '{login}'")
-        corect_pswd = cursor.fetchone()[0]
-        if login == corect_login and pswd == corect_pswd:
-            cursor.execute(f"SELECT nickname FROM users WHERE login = '{login}'")
-            print(f"Вход прошёл успешно! Привет, {cursor.fetchone()[0]}")
-            break
+        cursor.execute(f"SELECT email FROM users WHERE email = '{email}'")
+        correct_email = cursor.fetchone()[0]
+        cursor.execute(f"SELECT password FROM users WHERE email = '{email}'")
+        correct_passwd = cursor.fetchone()[0]
+        if email == correct_email and passwd == correct_passwd:
+            cursor.execute(f"SELECT nickname FROM users WHERE email = '{email}'")
+            name = cursor.fetchone()[0]
+            print(f"Вход прошёл успешно! Привет, {name}")
+            logger.info("User sign up succession")
+            return
         else:
-            print(Fore.RED + "Неверный логин и/или пароль!")
+            print(Fore.RED + "Неверный email и/или пароль!")
 
 
 def authentication() -> None:
     """
     Аутентификация пользователя
-    :return:
+    :return: None
     """
+    print("[1] Вход; [2] Регистрация")
     while True:
-        print("[1] Вход; [2] Регистрация\nВведите 1 или 2: ", end='')
         try:
-            digit = int(input())
+            digit = safe_input("Введите 1 или 2: ")
             match digit:
-                case 1:
+                case "1":
                     sign_up()
                     break
-                case 2:
+                case "2":
                     sign_in()
                     break
                 case _:

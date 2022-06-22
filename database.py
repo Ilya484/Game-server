@@ -7,7 +7,7 @@ cursor = db.cursor()
 def try_create():
     cursor.execute('''CREATE TABLE IF NOT EXISTS users (
                         nickname TEXT,
-                        login TEXT,
+                        email TEXT,
                         password TEXT
                         )''')
     db.commit()
