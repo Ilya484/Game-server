@@ -1,23 +1,12 @@
 from crypto import encrypt
 from database import *
 from mlogging import *
+from service_funcs import safe_input
+from class_ import User
 
 from colorama import init, Fore
 
 init(autoreset=True)
-
-
-def safe_input(greeting: str) -> str:
-    """
-    Безопасный ввод
-    :param greeting: str
-    :return: str
-    """
-    while True:
-        s = input(greeting).strip()
-        if s and all(sub not in s for sub in r"'\"\\,"):
-            return s
-        print(Fore.RED + "Строка содержит недопустимые символы. Пожалуйста, выполните ввод снова!")
 
 
 def sign_in():
@@ -32,8 +21,8 @@ def sign_in():
         email = safe_input("Введите email: ")
         if cursor.fetchone() != email:
             passwd = safe_input("Введите пароль: ")
-            cursor.execute(f"INSERT INTO users (nickname, email, password) VALUES (?, ?, ?)",
-                           (nick, encrypt(email), encrypt(passwd)))
+            cursor.execute(f"INSERT INTO users (nickname, email, password, coins) VALUES (?, ?, ?, ?)",
+                           (nick, encrypt(email), encrypt(passwd), 0))
             db.commit()
             print("Регистрация прошла успешно!")
             logger.info("User sign in succession")
