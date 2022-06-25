@@ -12,7 +12,7 @@ def safe_input(greeting: str) -> str:
     :return: str
     """
     while True:
-        s = input(greeting)
+        s = input(greeting).strip()
         if s and all(sub not in s for sub in r"'\"\\,"):
             return s
         print(Fore.RED + "Строка содержит недопустимые символы. Пожалуйста, выполните ввод снова!")
