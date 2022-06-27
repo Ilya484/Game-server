@@ -5,43 +5,52 @@ from mlogging import logger
 
 
 class User:
-    def __init__(self):
-        self.nick = None
-        self.email = None
-        self.coins = None
+    def __init__(self, nick=None, email=None, pas=''):
+        self.nick = nick
+        self.email = email
+        self.pas = encrypt(pas)
         self.is_login = False
+        try:
+            self.coins = self.get_balance()
+        except TypeError:
+            self.coins = 0
 
     def get_balance(self) -> int:
         """
         Получение баланса из БД
         :return: int
         """
-        return get_request("coins", {"email":self.email})
+        return get_request("coins", {"email":self.email})[0]
 
     def update_balance(self, delta: int) -> None:
         """
         Обновление в БД баланса на delta
-        :param delta:
-        :return:
+        :param delta: int
+        :return: None
         """
         current_balance = self.get_balance()
-        cursor.execute(f"UPDATE users SET coins = '{current_balance + delta}' WHERE email = '{self.email}'")
+        cursor.execute(f"UPDATE users SET coins = {current_balance + delta} WHERE email = '{self.email}'")
         db.commit()
-        self.coins += delta
+        self.coins = current_balance + delta
         logger.info("Balance updated succession")
 
-    def sign_in(self):
+    def sign_in(self) -> None:
         """
         Регистрация пользователя
-        :return:
+        :return: None
         """
+        if not (self.email is None):
+            cursor.execute(f"INSERT INTO users (nickname, email, password, coins) VALUES (?, ?, ?, ?)",
+                           (self.nick, self.email, self.pas, 5))
+            db.commit()
+            return
         self.nick = safe_input("Введите ник: ")
         while True:
             self.email = safe_input("Введите email: ")
             if (e := get_request('email', {"email": self.email})) is None or e[0] != self.email:
                 passwd = retry_input_pas()
                 cursor.execute(f"INSERT INTO users (nickname, email, password, coins) VALUES (?, ?, ?, ?)",
-                               (self.nick, self.email, passwd, 0))
+                               (self.nick, self.email, passwd, 5))
                 db.commit()
                 del passwd
                 del e
@@ -51,11 +60,14 @@ class User:
             else:
                 print(Fore.RED + "Эта почта уже занята! Используйте другую")
 
-    def sign_up(self):
+    def sign_up(self) -> None:
         """
         Вход пользователя
-        :return:
+        :return: None
         """
+        if not (self.email is None):
+            self.is_login = True
+            return
         while True:
             self.email = safe_input("Введите email: ")
             passwd = encrypt(safe_input("Введите пароль: "))

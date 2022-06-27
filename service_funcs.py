@@ -1,5 +1,7 @@
+from customs_types import function
+
 from colorama import init, Fore
-from database import cursor, db
+from database import cursor
 from crypto import encrypt
 
 init(autoreset=True)
@@ -41,3 +43,25 @@ def get_request(field: str, expresion: dict, table: str = "users"):
             strings_of_exp.append(f"{k} = '{v}'")
     cursor.execute(f"SELECT {field} FROM {table} WHERE {' AND '.join(strings_of_exp)}")
     return cursor.fetchone()
+
+
+def back_to(cur_func: function, params_of_cur_func: tuple, back_func: function, params_of_back_func: tuple) -> None:
+    """
+    Навигация назад
+    :param cur_func: function
+    :param params_of_cur_func: tuple
+    :param back_func: function
+    :param params_of_back_func: tuple
+    :return: None
+    """
+    while True:
+        sog = safe_input("Вы точно хотите вернуться? [Y/д] [N/н]").lower()
+        match sog:
+            case "y" | "д":
+                back_func(*params_of_back_func)
+                break
+            case "n" | "н":
+                cur_func(*params_of_cur_func)
+                break
+            case _:
+                print(Fore.RED + "Такого варианта нет. Пожалуйста, выполните ввод снова!")
