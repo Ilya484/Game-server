@@ -1,10 +1,10 @@
 from os import system
 
-from class_ import User
+from src.class_ import User
 from colorama import init, Fore
 from tabulate import tabulate
-from service_funcs import safe_input, back_to
-from games import guess_number
+from src.service_funcs import safe_input, back_to
+from minigames.guess_a_number import guess_number
 
 init(autoreset=True)
 

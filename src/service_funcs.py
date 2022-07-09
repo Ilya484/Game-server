@@ -1,8 +1,9 @@
-from customs_types import function
+from typing import Callable
 
 from colorama import init, Fore
-from database import cursor
-from crypto import encrypt
+
+from src.crypto import encrypt
+from src.database import cursor
 
 init(autoreset=True)
 
@@ -15,7 +16,7 @@ def safe_input(greeting: str) -> str:
     """
     while True:
         s = input(greeting).strip()
-        if s and all(sub not in s for sub in r"'\"\\,"):
+        if s and all(sub not in s for sub in r"'\"\,"):
             return s
         print(Fore.RED + "Строка содержит недопустимые символы. Пожалуйста, выполните ввод снова!")
 
@@ -45,18 +46,18 @@ def get_request(field: str, expresion: dict, table: str = "users"):
     return cursor.fetchone()
 
 
-def back_to(cur_func: function, params_of_cur_func: tuple, back_func: function, params_of_back_func: tuple) -> None:
+def back_to(cur_func: Callable, params_of_cur_func: tuple, back_func: Callable, params_of_back_func: tuple) -> None:
     """
     Навигация назад
-    :param cur_func: function
+    :param cur_func: Callable
     :param params_of_cur_func: tuple
-    :param back_func: function
+    :param back_func: Callable
     :param params_of_back_func: tuple
     :return: None
     """
     while True:
         sog = safe_input("Вы точно хотите вернуться? [Y/д] [N/н]").lower()
-        match sog:
+        match sog.strip():
             case "y" | "д":
                 back_func(*params_of_back_func)
                 break

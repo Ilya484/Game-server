@@ -1,7 +1,7 @@
-from database import *
-from service_funcs import *
-from crypto import encrypt
-from mlogging import logger
+from src.database import *
+from src.service_funcs import *
+from src.crypto import encrypt
+from src.mlogging import logger
 
 
 class User:
@@ -65,7 +65,7 @@ class User:
         Вход пользователя
         :return: None
         """
-        if not (self.email is None):
+        if not (self.email is None) and encrypt(self.pas) == get_request('password', {"email": self.email})[0]:
             self.is_login = True
             return
         while True:
